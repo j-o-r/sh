@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "module": "es2022",
+    "target": "es2022",
+    "lib": [
+      "node"
+    ],
+    "checkJs": true
+  },
+  "exclude": []
+}

@@ -1,0 +1,21 @@
+{
+  "name": "jor-sh",
+  "author": "Jorrit Duin <jorrit.duin@gmail.com>",
+  "type": "module",
+  "version": "0.0.1",
+  "description": "Execute shell commands from javascript",
+  "main": "src/sh.js",
+  "types": "src/sh.d.ts",
+  "scripts": {
+    "test": "test/sh.js"
+  },
+  "license": "Apache License, Version 2.0",
+  "dependencies": {
+    "ps-tree": "^1.2.0",
+    "which": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.8.10",
+    "uvu": "^0.5.6"
+  }
+}
