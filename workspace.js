@@ -4,12 +4,15 @@
 * - Create the windows
 * - Activate AI helper
 */
-import { SH } from 'src/sh.js';
+import { SH } from './src/sh.js';
 import path from 'node:path';
 
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const SESSION = 'SH';
 const EXPERT = 'Coder';
-
+SH.verbose = true;
 // first row height percentage. (0:0)
 const heightp = 75;
 
@@ -23,7 +26,8 @@ try {
 const lines = parseInt((await SH`tput lines`).stdout.trim());
 const cols = parseInt((await SH`tput cols`).stdout.trim());
 // # Calculate height based on available line height
-const HEIGHT = lines * heightp / 100;
+const HEIGHT = Math.ceil(lines * heightp / 100);
+console.log({HEIGHT});
 // Create tmux layout
 const flags = [
   '-d',

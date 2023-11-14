@@ -2,3 +2,6 @@ config
 node_modules
 .git
 .gitignore
+.cache
+jsconfig.json
+workspace.js
