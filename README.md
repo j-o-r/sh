@@ -4,7 +4,7 @@ Easy execute "shell" commands from within your javascript files
 
 ```javascript
 
-import {SH} from '@jorr/sh';
+import {SH} from '@j-o-r/sh';
 const ls = (await SH`ls -FLa`.pipe(SH`grep README.md`)).stdout;
 
 ```
@@ -13,7 +13,7 @@ const ls = (await SH`ls -FLa`.pipe(SH`grep README.md`)).stdout;
 
 ```bash
 
-npm i @jor/sh
+npm i @j-o-r/sh --save
 
 ```
 
