@@ -1,11 +1,13 @@
 {
-  "name": "jor-sh",
+  "name": "@j-o-r/sh",
   "author": "Jorrit Duin <jorrit.duin@gmail.com>",
   "type": "module",
   "version": "0.0.1",
   "description": "Execute shell commands from javascript",
   "main": "src/sh.js",
-  "types": "src/sh.d.ts",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "test": "test/sh.js"
   },
@@ -25,5 +27,11 @@
   "bugs": {
     "url": "https://github.com/j-o-r/sh/issues"
   },
-  "homepage": "https://github.com/j-o-r/sh"
+  "homepage": "https://github.com/j-o-r/sh",
+  "keywords": [
+    "shell",
+    "execute",
+    "spwan",
+    "child"
+  ]
 }

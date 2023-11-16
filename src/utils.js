@@ -1,4 +1,4 @@
-// Copyright 2022 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,6 +11,20 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+// 
+//
+// Original Source: zx
+// Link to Original Source: https://github.com/google/zx
+// Reason for Using This Code: 
+// The core functionality of this code is highly beneficial. However, certain parts of the original code 
+// were overwriting the global namespace with core libraries and variables. This was causing conflicts with 
+// other packages (for instance, fetch) and introducing unexpected elements into my code base.
+// Changes Made: 
+// - The code has been or is being reformatted to comply with ES2020 standards.
+// - Some methods were added and existing ones were modified to enhance usability.
+// - The namespace has been changed from '$' to 'SH'.
+// Modified by: jorrit.duin+sh[AT]gmail.com
+
 import { promisify } from 'node:util';
 import psTreeModule from 'ps-tree';
 export const psTree = promisify(psTreeModule);
@@ -42,6 +56,26 @@ export function quotePowerShell(arg) {
 		return arg;
 	}
 	return `'` + arg.replace(/'/g, "''") + `'`;
+}
+
+export function log (entry) {
+	switch (entry.kind) {
+		case 'cmd':
+			if (!entry.verbose) return;
+			process.stderr.write(formatCmd(entry.cmd));
+			break;
+		case 'stdout':
+		case 'stderr':
+			if (!entry.verbose) return;
+			process.stderr.write(entry.data);
+			break;
+		case 'retry':
+			if (!entry.verbose) return;
+			process.stderr.write(entry.error + '\n');
+		case 'cd':
+			if (!entry.verbose) return;
+			process.stderr.write(`cd ${entry.dir}\n`);
+	}
 }
 export function exitCodeInfo(exitCode) {
 	return {

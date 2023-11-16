@@ -4,4 +4,6 @@ node_modules
 .gitignore
 .cache
 jsconfig.json
+jor-sh.png
 workspace.js
+test

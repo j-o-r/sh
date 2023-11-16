@@ -4,26 +4,33 @@ Easy execute "shell" commands from within your javascript files
 
 ```javascript
 
-import {SH} from 'jorr-sh';
+import {SH} from '@jorr/sh';
 const ls = (await SH`ls -FLa`.pipe(SH`grep README.md`)).stdout;
 
 ```
 
-## Project Description
+## Install
 
-I appreciate the excellent [zx](https://github.com/google/zx) library, 
-but it overwrites `globals` such as `fetch` and provides libraries which I don't want or need.
+```bash
 
-This project contains the `core` of `zx` and solely provides the shell execution method.
+npm i @jor/sh
 
+```
 
-## Current Status / To-Do List
+## Project Overview
 
-This is an initial, alpha stage effort.
+This project is inspired by the remarkable [zx](https://github.com/google/zx) library. 
+However, it aims to provide a more streamlined approach by avoiding the overwriting of `globals` such as `fetch` and excluding libraries that may not be necessary for all users.
 
-- [ ] Write tests
-- [ ] Convert/refactor code to ES2022
-- [ ] Write documentation and JSDoc
+The main focus of this project is to offer the `core` functionality of `zx`, primarily the shell execution method.
+
+## Project Progress / Task List
+
+Currently, the project is in its early, alpha development phase.
+
+- [ ] Develop test cases
+- [ ] Refactor and upgrade code to ES2020 standards
+- [ ] Create documentation
 
 ## License
 

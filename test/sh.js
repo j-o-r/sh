@@ -2,8 +2,8 @@
 
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { SH, within, sleep, retry, expBackoff, ProcessOutput } from '../src/sh.js';
-
+import { SH, within, sleep, retry, expBackoff} from '../src/sh.js';
+import ProcessOutput from '../src/ProcessOutput.js';
 const test = suite('SH');
 
 test('Elementary usages', async () => {
@@ -18,7 +18,7 @@ test('Elementary usages', async () => {
 })
 
 test('within: async context, mutiple commands and a sleep', () => {
-	SH.verbose = true;
+	SH.verbose = false;
 	// 'within' Creates an async context
 	within(async () => {
 		const res = await Promise.all([
@@ -41,6 +41,7 @@ test(`retry`, async () => {
 	  const p = await retry(3, expBackoff(), () => SH`curl -s https://flipwrsi`);
 		assert.unreachable('should have thrown');
 	} catch (e) {
+		console.error(e.toString());
 		// Error === ProcessOutput
 	  assert.equal(e instanceof ProcessOutput, true);
 	  assert.equal(e.exitCode, 6);
