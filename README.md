@@ -2,7 +2,7 @@
 
 Execute shell commands from JavaScript.
 
-![[jor-sh.png]]
+![Alt text](https://raw.githubusercontent.com/j-o-r/sh/main/jor-sh.png "logo")
 
 ## Introduction
 
