@@ -30,8 +30,19 @@
   "homepage": "https://github.com/j-o-r/sh",
   "keywords": [
     "shell",
-    "execute",
-    "spwan",
-    "child"
+    "command-line",
+    "shell-script",
+    "nodejs",
+    "javascript",
+    "process-management",
+    "script-execution",
+    "cli",
+    "zx-inspired",
+    "automation",
+    "devops",
+    "command-execution",
+    "shell-commands",
+    "process-promise",
+    "process-output"
   ]
 }

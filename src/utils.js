@@ -72,9 +72,11 @@ export function log (entry) {
 		case 'retry':
 			if (!entry.verbose) return;
 			process.stderr.write(entry.error + '\n');
+			break;
 		case 'cd':
 			if (!entry.verbose) return;
 			process.stderr.write(`cd ${entry.dir}\n`);
+			break;
 	}
 }
 export function exitCodeInfo(exitCode) {

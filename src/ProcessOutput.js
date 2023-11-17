@@ -28,8 +28,10 @@
 import { inspect } from 'node:util';
 import { exitCodeInfo} from './utils.js';
 
-// Why is it extending an error?
-// The error is hidden and only accsisable with .toString();
+/**
+* The ProcessPromise returns a ProcessOutput even when it fails, by rejecting it.
+* The extension of the Error class is implemented to ensure compatibility when an Error is expected upon rejection.
+*/
 class ProcessOutput extends Error {
 	#code = 0;
 	#signal;
@@ -51,33 +53,61 @@ class ProcessOutput extends Error {
 		this.#stdout = stdout;
 		this.#stderr = stderr;
 		this.#combined = combined;
+		this.name = 'ProcessOutput';
 	}
+	/**
+	* This string represents the standard output (stdout) from the child process.
+	* @returns {string}
+	*/
 	get stdout() {
 		return this.#stdout;
 	}
+	/**
+	* This string represents the error output (stderr) from the child process.
+	* @returns {string}
+	*/
 	get stderr() {
 		return this.#stderr;
 	}
-	get output() {
-		return this.#combined;
+
+	/**
+	* This is an internal method that is often invoked automatically 
+	* by various JavaScript methods. 
+	* It consolidates the entire output for completeness and facilitates further processing.
+	* 
+	* @returns {string} The consolidated output as a
+	*/
+	toString() {
+		return this.#combined.trim();
 	}
+	/**
+	* This represents the exit code returned by the external process.
+	* @returns {number} The exit
+	*/
 	get exitCode() {
 		return this.#code;
 	}
+	/**
+	* This represents the exit signal, for example, "SIGTERM", received from the child process.
+	* @returns {string} The exit signal from the child
+	*/
 	get signal() {
 		return this.#signal;
 	}
-	/** Custom: called upon console.log(output) */
-	[inspect.custom]() {
-		let stringify = (s) => s.length === 0 ? "''" : inspect(s);
-		return `ProcessOutput {
-   stdout: ${stringify(this.stdout)},
-   stderr: ${stringify(this.stderr)},
-   signal: ${inspect(this.signal)},
-   exitCode: ${(this.exitCode)}${exitCodeInfo(this.exitCode)
-				? ' (' + exitCodeInfo(this.exitCode) + ')'
-				: ''}
- }`;
-	}
+ 	/** 
+	* This method is used for debugging purposes. It displays the current state of the object
+	* when passed to the console.log function.
+	*/
+ 	[inspect.custom]() {
+ 		let stringify = (s) => s.length === 0 ? "''" : inspect(s);
+ 		return `ProcessOutput {
+    stdout: ${stringify(this.stdout)},
+    stderr: ${stringify(this.stderr)},
+    signal: ${inspect(this.signal)},
+    exitCode: ${(this.exitCode)}${exitCodeInfo(this.exitCode)
+ 				? ' (' + exitCodeInfo(this.exitCode) + ')'
+ 				: ''}
+  }`;
+ 	}
 }
 export default ProcessOutput;

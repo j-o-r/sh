@@ -1,33 +1,58 @@
 #!/usr/bin/env node
-/**
-* create a tmux session
-* - Create the windows
-* - Activate AI helper
+/*
+# Workspace
+
+This script sets up a tmux session with multiple windows.
+
+ ```
+ ./workspace.md
+ ```
+
+```
+   0: Main Window
+   +---+---+
+   |   0   |
+   +---+---+
+   | 1 | 2 |
+   +---+---+
+```
+0. Main Editor Window
+1. CLI Test/Commands Window
+2. qwe - AI Environment (a custom, homebrewed copilot for this project)
+
+This script resizes the tmux session to fit the available screen size and prepares applications/tools for use in this session.
 */
 import { SH } from './src/sh.js';
 import path from 'node:path';
-
 import { fileURLToPath } from 'url';
+// @ts-ignore
+SH.verbose = false;
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const SESSION = 'SH';
+
+//  const test = await SH`ls -Fla`;
+//  console.log(test.toString());
+//  process.exit();
+
+const SESSION = 'j-o-r-sh';
 const EXPERT = 'Coder';
-SH.verbose = true;
-// first row height percentage. (0:0)
 const heightp = 75;
 
 const socketFile = path.resolve(__dirname, '.cache/', `${EXPERT}.sock`);
 const tmux = process.env.TMUX;
 if (tmux) throw 'Do not run this in a tmux session';
 try {
-  const sessions = (await SH`tmux ls`).stdout;
-  if (sessions.includes(`${SESSION}:`)) throw `Session ${SESSION} already created` ;
+  const sessions = await SH`tmux ls`;
+  if (sessions.includes(`${SESSION}:`)) {
+    console.log(`Session ${SESSION} already created`);
+    process.exit(1);
+  }
 } catch (_e) {}
-const lines = parseInt((await SH`tput lines`).stdout.trim());
-const cols = parseInt((await SH`tput cols`).stdout.trim());
+const lines = parseInt(await SH`tput lines`);
+const cols = parseInt(await SH`tput cols`);
 // # Calculate height based on available line height
 const HEIGHT = Math.ceil(lines * heightp / 100);
-console.log({HEIGHT});
 // Create tmux layout
 const flags = [
   '-d',
@@ -40,9 +65,9 @@ const flags = [
 ];
 await SH`tmux new-session ${flags}`;
 // Set the environment BEFORE creating any panes
-// Be able to find 'this' socket endpoint in 'this' tmux session
+// to be able to find 'this' socket endpoint in 'this' tmux session
 await SH`tmux setenv -t ${SESSION} WORKSPACE_SOCKET ${socketFile}`;
-// tmux new-session -d -s $SESSION -x "$cols" -y "$lines"
+// 
 await SH`tmux rename-window 'edit'`;
 // # create 2 rows
 await SH`tmux split-window -v`;
@@ -52,16 +77,10 @@ await SH`tmux select-pane -t ${SESSION}:0.1`;
 // # Focus on the second pane
 // # Devide row 1 in 2 panes
 await SH`tmux split-window -h`;
-// # tmux display-message -p '#S'
 await SH`tmux send-keys -t ${SESSION}:0.2 'joai ${EXPERT} --socket ${socketFile}' C-m`;
 // set focus on main window
 await SH`tmux select-window -t ${SESSION}:0`;
 // Select main pane
-await SH`tmux select-pane -t ${SESSION}:0.0`;
-
-// FIrst select window
-await SH`tmux select-window -t ${SESSION}:0`;
-// Then select pane for this to work
 await SH`tmux select-pane -t ${SESSION}:0.0`;
 // attach to session
 await SH`tmux attach -t ${SESSION}`;

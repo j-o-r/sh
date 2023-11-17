@@ -63,14 +63,16 @@ class ProcessPromise extends Promise {
 	* @param {PromiseConstruct} p - A function that takes two arguments, resolve and reject.
 	*/
 	constructor(p) {
-		super(p);
+    super(p)
 	}
 	/**
-	* @param {string} cmd
-	* @param {string} from
-	* @param {function} resolve
-	* @param {function} reject
-	* @param {object} options
+	* Set the environment 
+	* and the 
+	* @param {string} cmd - Command to execute
+	* @param {string} from - Position in the codfe where this is triggred from
+	* @param {function} resolve - Promise resolve method
+	* @param {function} reject - Reject method
+	* @param {object} options - Settings (options default)
 	*/
 	_bind(cmd, from, resolve, reject, options) {
 		this.#command = cmd;
@@ -79,6 +81,9 @@ class ProcessPromise extends Promise {
 		this.#reject = reject;
 		this.#snapshot = { ...options };
 	}
+	/**
+	* Run the promise
+	*/
 	run() {
 		const ENV = this.#snapshot;
 		if (this.child) return this; // The _run() can be called from a few places.
@@ -146,6 +151,10 @@ class ProcessPromise extends Promise {
 		}
 		return this;
 	}
+	/**
+	* stdin child stream
+	* @retruns {Writeable}
+	*/
 	get stdin() {
 		this.stdio('pipe');
 		this.run();
@@ -154,6 +163,10 @@ class ProcessPromise extends Promise {
 			throw new Error('The stdin of subprocess is null.');
 		return this.child.stdin;
 	}
+	/**
+	* stdout child stream
+	* @retruns {Readable}
+	*/
 	get stdout() {
 		this.run();
 		assert(this.child);
@@ -161,6 +174,10 @@ class ProcessPromise extends Promise {
 			throw new Error('The stdout of subprocess is null.');
 		return this.child.stdout;
 	}
+	/**
+	* stderr child stream
+	* @retruns {Readable}
+	*/
 	get stderr() {
 		this.run();
 		assert(this.child);
@@ -168,6 +185,10 @@ class ProcessPromise extends Promise {
 			throw new Error('The stderr of subprocess is null.');
 		return this.child.stderr;
 	}
+	/**
+	* process exit code
+	* @returns {Promise<number>}
+	*/
 	get exitCode() {
 		return this.then((p) => p.exitCode, (p) => p.exitCode);
 	}
@@ -180,6 +201,11 @@ class ProcessPromise extends Promise {
 	catch(onrejected) {
 		return super.catch(onrejected);
 	}
+	/**
+	* Pipe the output to the input to the next Promise
+	* @example
+	* const res = await SH`ls -FLa`.pipe(SH`grep package.json`);
+	*	*/
 	pipe(dest) {
 		if (typeof dest == 'string')
 			throw new Error('The pipe() method does not take strings. Forgot SH?');
@@ -204,6 +230,9 @@ class ProcessPromise extends Promise {
 			return this;
 		}
 	}
+	/**
+	* Send a KILL signal to the child process
+	*/
 	async kill(signal = 'SIGTERM') {
 		if (!this.child)
 			throw new Error('Trying to kill a process without creating one.');
@@ -225,40 +254,68 @@ class ProcessPromise extends Promise {
 		this.#stdio = [stdin, stdout, stderr];
 		return this;
 	}
+	/**
+	* Do not throw
+	*/
 	nothrow() {
 		this.#nothrow = true;
 		return this;
 	}
+	/**
+	* supress log output
+	* SH.verbose = false; does the same
+	*/
 	quiet() {
 		this.#quiet = true;
 		return this;
 	}
+	/**
+	* Show log output in the console
+	*/
 	verbose() {
 		this._quiet = false;
 		return this;
 	}
+	/** 
+	* Set a timeout to kill a process
+	*
+	* @param {string} d - 10s, 1000ms
+	* @param {string} [signal] - default "SIGTERM" Signal to send to kill the proces
+	*/
 	timeout(d, signal = 'SIGTERM') {
 		this._timeout = parseDuration(d);
 		this._timeoutSignal = signal;
 		return this;
 	}
+  /**
+	* stop execution for the next step
+	*/
 	halt() {
 		this.#halted = true;
 		return this;
 	}
 	/** 
+	* @private
+	* Set a prerun action, internal use only
 	* @param {function} f
 	*/
 	set _prerun(f) {
+		// @ts-ignore
 		this.#prerun = f;
 	}
 	/** 
+	* @private
+	* Set a postrun action, internal use only
 	* @param {function} f
 	*/
 	set _postrun(f) {
+		// @ts-ignore
 		this.#postrun = f;
 	}
-
+  /**
+	* Is this promise halted?
+	* @returns {boolean}
+	*/
 	get isHalted() {
 		return this.#halted;
 	}

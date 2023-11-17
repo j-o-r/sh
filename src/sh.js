@@ -26,7 +26,7 @@
 // Modified by: jorrit.duin+sh[AT]gmail.com
 
 import assert from 'node:assert';
-import { AsyncLocalStorage} from 'node:async_hooks';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import which from 'which';
 import { log, parseDuration, quote, quotePowerShell, } from './utils.js';
 import ProcessPromise from './ProcessPromise.js';
@@ -95,19 +95,18 @@ const SH = new Proxy(function(pieces, ...args) {
 		cmd += s + pieces[++i];
 	}
 	let resolve, reject;
+
 	const promise = new ProcessPromise((...args) => ([resolve, reject] = args));
-	// So sync the CWD here instead of the extensive hook used
 	// re-add the environment
 	defaults.processCwd = process.cwd();
 	defaults.env = process.env,
-	promise._bind(cmd, from, resolve, reject, getStore());
+		promise._bind(cmd, from, resolve, reject, getStore());
 	// Postpone run to allow promise configuration.
 	setImmediate(() => promise.isHalted || promise.run());
 	return promise;
 }, {
 	// this will get and set from:
-	// defaults OR storage (within)
-	// creating a different 'env'
+	// defaults OR storage (@see within());
 	set(_, key, value) {
 		const target = key in Function.prototype ? _ : getStore();
 		Reflect.set(target, key, value);
@@ -118,12 +117,29 @@ const SH = new Proxy(function(pieces, ...args) {
 		return Reflect.get(target, key);
 	},
 });
-// ---
 
+/**
+* Create a async context in an sync block
+* @param {function} callback - async function
+* @example
+* const p = within(async () => {
+*		const res = await Promise.all([
+*			SH`sleep 1; echo 1`,
+*			SH`sleep 2; echo 2`,
+*			sleep(2),
+*			SH`sleep 3; echo 3`
+*		]);
+*/
 const within = (callback) => {
+	// @ts-ignore
 	return storage.run({ ...getStore() }, callback);
 }
-
+/**
+* This function reads the standard input (stdin) for the current process.
+* It is used to get piped content into a script.
+* @example 
+* const content = await stdin();
+*/
 const stdin = async () => {
 	let buf = '';
 	process.stdin.setEncoding('utf8');
@@ -132,6 +148,18 @@ const stdin = async () => {
 	}
 	return buf;
 }
+/**
+* This function retries a command a specified number of times.
+* @example 
+* // Retry a command 3 times
+* const p = await retry(3, () => SH`curl -s https://flipwrsi`);
+* 
+* // Retry a command 3 times with an interval of 1 second between each try
+* const p = await retry(3, '1s', () => SH`curl -s https://flipwrsi`);
+* 
+* // Retry a command 3 times with irregular intervals using exponential backoff
+* const p = await retry(3, expBackoff(), () => SH`curl -s https://flipwrsi`);
+*/
 const retry = async (count, a, b) => {
 	const total = count;
 	let callback;
@@ -181,6 +209,18 @@ const retry = async (count, a, b) => {
 	}
 	throw lastErr;
 }
+/**
+* This function pauses or "sleeps" code execution for a specified duration.
+* @param {string} duration - The duration to pause execution for, e.g., '100ms' or '3s'.
+* 
+* @example
+* 
+* const res = await Promise.all([
+* 	SH`sleep 2; echo 2`,  // Sleep for 2 seconds
+* 	sleep(2),             // Sleep for 2 seconds
+* 	SH`sleep 3; echo 3`   // Sleep for 3 seconds
+* ]);
+*/
 
 const sleep = (duration) => {
 	return new Promise((resolve) => {
@@ -194,8 +234,8 @@ const sleep = (duration) => {
 const cd = (dir) => {
 	// @ts-ignore
 	const verbose = SH.verbose;
-  log({ kind: 'cd', dir, verbose });
-  process.chdir(dir);
+	log({ kind: 'cd', dir, verbose });
+	process.chdir(dir);
 }
 function* expBackoff(max = '60s', rand = '100ms') {
 	const maxMs = parseDuration(max);
@@ -206,10 +246,10 @@ function* expBackoff(max = '60s', rand = '100ms') {
 		yield Math.min(2 ** n++, maxMs) + ms;
 	}
 }
-const syncCwd = () => {
-	if (SH['processCwd'] != process.cwd())
-		process.chdir(SH['processCwd']);
-}
+// const syncCwd = () => {
+// 	if (SH['processCwd'] != process.cwd())
+// 		process.chdir(SH['processCwd']);
+// }
 
 export {
 	/** @type {Shell} */
