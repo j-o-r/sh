@@ -205,7 +205,7 @@ class ProcessPromise extends Promise {
 	* Pipe the output to the input to the next Promise
 	* @example
 	* const res = await SH`ls -FLa`.pipe(SH`grep package.json`);
-	*	*/
+	*/
 	pipe(dest) {
 		if (typeof dest == 'string')
 			throw new Error('The pipe() method does not take strings. Forgot SH?');

@@ -221,7 +221,6 @@ const retry = async (count, a, b) => {
 * 	SH`sleep 3; echo 3`   // Sleep for 3 seconds
 * ]);
 */
-
 const sleep = (duration) => {
 	return new Promise((resolve) => {
 		setTimeout(resolve, parseDuration(duration));
@@ -250,7 +249,6 @@ function* expBackoff(max = '60s', rand = '100ms') {
 // 	if (SH['processCwd'] != process.cwd())
 // 		process.chdir(SH['processCwd']);
 // }
-
 export {
 	/** @type {Shell} */
 	SH,
