@@ -4,12 +4,7 @@
 
 This script sets up a tmux session with multiple windows.
 
- ```
- ./workspace.md
- ```
-
 ```
-   0: Main Window
    +---+---+
    |   0   |
    +---+---+
@@ -30,10 +25,6 @@ SH.verbose = false;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-//  const test = await SH`ls -Fla`;
-//  console.log(test.toString());
-//  process.exit();
 
 const SESSION = 'j-o-r-sh';
 const EXPERT = 'Coder';
