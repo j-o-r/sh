@@ -6,7 +6,7 @@ import { SH, within, sleep, retry, expBackoff } from '../src/sh.js';
 import ProcessOutput from '../src/ProcessOutput.js';
 const test = suite('SH');
 
-test('Elementary usages 1', async () => {
+test('Elementary usages 1 with pipe', async () => {
 	const res = await SH`ls -FLa`.pipe(SH`grep package.json`);
 	assert.equal(res instanceof ProcessOutput, true);
 	assert.equal(res.exitCode, 0);
@@ -20,7 +20,7 @@ test('Elementary usages 2', async () => {
 	assert.equal(res.exitCode, 0);
 	assert.equal(res.stdout.trim(), 'package.json');
 })
-test('within: async context, mutiple commands and a sleep', () => {
+test('within: async context, multiple commands and a sleep', () => {
 	SH.verbose = false;
 	// 'within' Creates an async context
 	within(async () => {
@@ -74,9 +74,8 @@ test('kill', async () => {
 		assert.equal(e.exitCode, null);
 	});
 });
-test('kill, not throw', async () => {
-	const p = SH`sleep 5; echo 1`;
-	p.nothrow();
+test('kill, no throw', async () => {
+	const p = SH`sleep 5; echo 1`.nothrow();
 	setTimeout(async () => {
 		const pids = await p.kill();
 		assert.equal(pids.length, 2);
