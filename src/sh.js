@@ -27,7 +27,6 @@
 
 import assert from 'node:assert';
 import { AsyncLocalStorage } from 'node:async_hooks';
-import which from 'which';
 import { log, parseDuration, quote, quotePowerShell, } from './utils.js';
 import ProcessPromise from './ProcessPromise.js';
 // const processCwd = Symbol('processCwd');
@@ -37,15 +36,11 @@ const defaults = {
 	processCwd: '',
 	verbose: false,
 	env: {},
-	shell: '',
+	shell: 'bash',
 	prefix: '',
 };
-if (process.platform == 'win32') {
-	defaults.shell = which.sync('powershell.exe');
-} else {
-	defaults.shell = which.sync('bash');
-	defaults.prefix = 'set -euo pipefail;';
-}
+defaults.prefix = 'set -euo pipefail;/usr/bin/env';
+
 /**
 * Escape CLI arguments
 * @retruns {string}

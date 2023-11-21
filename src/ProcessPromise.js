@@ -25,10 +25,11 @@
 // - The namespace has been changed from '$' to 'SH'.
 // Modified by: jorrit.duin+sh[AT]gmail.com
 
-import { spawn } from 'node:child_process';
+// import { spawn, exec } from 'node:child_process';
 import assert from 'node:assert';
-import { log, errnoMessage, exitCodeInfo, noop, parseDuration, psTree } from './utils.js';
+import { killProcesses, spawn, log, errnoMessage, exitCodeInfo, noop, parseDuration } from './utils.js';
 import ProcessOutput from './ProcessOutput.js';
+
 /** 
 * @typedef {Function} resolver
 * @param {ProcessOutput} value
@@ -42,7 +43,31 @@ import ProcessOutput from './ProcessOutput.js';
 * @param {resolver} resolve
 * @param {rejecter} reject
 */
+/**
+ * @typedef {('pipe' | 'ignore' | 'inherit' | Stream | number)} StdioOption
+ * @description Defines the stdio configuration for each of the standard streams.
+ * 
+ * - 'pipe' creates a pipe between the child process and the parent process. 
+ *   The parent end of the pipe is exposed as a property on the `ChildProcess` object.
+ * - 'ignore' indicates that the child process's corresponding stdio file descriptor will be ignored.
+ * - 'inherit' passes the corresponding stdio stream to/from the child process.
+ * - Stream object to be used for the stdio stream.
+ * - Positive integer representing a file descriptor to be used for the stdio stream.
+ */
 
+/**
+ * @typedef {Array<StdioOption>|StdioOption} StdioOptions
+ * @description 
+ * Configures the stdio streams for the child process. This can be an array or a single StdioOption.
+ * 
+ * Array Form: Specify the configuration for [stdin, stdout, stderr].
+ *   - If array length is more than 3, additional positions correspond to extra streams.
+ * Single Value: This value will be applied to stdin, stdout, and stderr.
+ * 
+ * Examples:
+ * - ['pipe', 'pipe', 'ignore']: Pipe stdin and stdout, ignore stderr.
+ * - 'inherit': Inherit all stdio streams from the parent.
+ */
 class ProcessPromise extends Promise {
 	#command = '';
 	#from = '';
@@ -51,6 +76,7 @@ class ProcessPromise extends Promise {
 	/** @type {rejecter} */
 	#reject = () => { };
 	#snapshot = {};
+	/** @type {StdioOptions} */
 	#stdio = ['inherit', 'pipe', 'pipe'];
 	#nothrow = false;
 	#quiet = false;
@@ -63,7 +89,7 @@ class ProcessPromise extends Promise {
 	* @param {PromiseConstruct} p - A function that takes two arguments, resolve and reject.
 	*/
 	constructor(p) {
-    super(p)
+		super(p)
 	}
 	/**
 	* Set the environment 
@@ -94,10 +120,10 @@ class ProcessPromise extends Promise {
 			verbose: ENV.verbose && !this.#quiet,
 		});
 		const cwd = ENV['processCwd'];
-		this.child = spawn(ENV.prefix + this.#command, {
+		const shell = ENV['shell'];
+		this.child = spawn(ENV.prefix, [this.#command], {
 			cwd,
-			// cwd: $.cwd ?? $[processCwd],
-			shell: typeof ENV.shell === 'string' ? ENV.shell : true,
+			shell,
 			stdio: this.#stdio,
 			windowsHide: true,
 			env: ENV.env,
@@ -232,23 +258,15 @@ class ProcessPromise extends Promise {
 	}
 	/**
 	* Send a KILL signal to the child process
+	* @returns {Promise<number[]>} the pid numbers that has been killed
 	*/
 	async kill(signal = 'SIGTERM') {
 		if (!this.child)
 			throw new Error('Trying to kill a process without creating one.');
 		if (!this.child.pid)
 			throw new Error('The process pid is undefined.');
-		let children = await psTree(this.child.pid);
-		for (const p of children) {
-			try {
-				process.kill(+p.PID, signal);
-			}
-			catch (e) { }
-		}
-		try {
-			process.kill(this.child.pid, signal);
-		}
-		catch (e) { }
+
+		return await killProcesses(this.child.pid, signal)
 	}
 	stdio(stdin, stdout = 'pipe', stderr = 'pipe') {
 		this.#stdio = [stdin, stdout, stderr];
@@ -287,7 +305,7 @@ class ProcessPromise extends Promise {
 		this._timeoutSignal = signal;
 		return this;
 	}
-  /**
+	/**
 	* stop execution for the next step
 	*/
 	halt() {
@@ -312,7 +330,7 @@ class ProcessPromise extends Promise {
 		// @ts-ignore
 		this.#postrun = f;
 	}
-  /**
+	/**
 	* Is this promise halted?
 	* @returns {boolean}
 	*/

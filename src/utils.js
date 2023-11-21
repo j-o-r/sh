@@ -25,9 +25,51 @@
 // - The namespace has been changed from '$' to 'SH'.
 // Modified by: jorrit.duin+sh[AT]gmail.com
 
-import { promisify } from 'node:util';
-import psTreeModule from 'ps-tree';
-export const psTree = promisify(psTreeModule);
+import { spawn, exec } from 'node:child_process';
+export { spawn };
+/**
+* Kills a process and all child processes of a given process ID in Linux/Posix.
+* @param {number} processPid - The process ID.
+* @param {string} signal - Signal to send.
+* @retruns {Promise<number[]>} array with killed pid numbers
+*/
+export function killProcesses(processPid, signal) {
+	const killed = [];
+	return new Promise((resolve, reject) => {
+		// Command to get child PIDs of the given process
+		const cmd = `pgrep -P ${processPid}`;
+		exec(cmd, (error, stdout, stderr) => {
+			if (error) {
+				reject(error);
+				return;
+			}
+			if (stderr) {
+				reject(new Error(stderr));
+				return;
+			}
+			const pids = stdout.split(/\r?\n/).filter(pid => pid);
+			// Kill each child process
+			try {
+				for (const pid of pids) {
+					process.kill(parseInt(pid), signal);
+					killed.push(parseInt(pid));
+				}
+			} catch (err) {
+				reject(err);
+				return;
+			}
+			// Kill the parent process after all child processes have been killed
+			try {
+				process.kill(processPid, signal);
+				killed.push(processPid);
+			} catch (err) {
+				reject(err);
+				return;
+			}
+			resolve(killed);
+		});
+	});
+}
 export function noop() { }
 export function randomId() {
 	return Math.random().toString(36).slice(2);
@@ -57,8 +99,7 @@ export function quotePowerShell(arg) {
 	}
 	return `'` + arg.replace(/'/g, "''") + `'`;
 }
-
-export function log (entry) {
+export function log(entry) {
 	switch (entry.kind) {
 		case 'cmd':
 			if (!entry.verbose) return;

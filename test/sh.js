@@ -2,7 +2,7 @@
 
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { SH, within, sleep, retry, expBackoff} from '../src/sh.js';
+import { SH, within, sleep, retry, expBackoff } from '../src/sh.js';
 import ProcessOutput from '../src/ProcessOutput.js';
 const test = suite('SH');
 
@@ -38,30 +38,51 @@ test('within: async context, mutiple commands and a sleep', () => {
 test(`retry`, async () => {
 	SH.verbose = false;
 	try {
-	  const p = await retry(3, expBackoff(), () => SH`curl -s https://flipwrsi`);
+		const p = await retry(3, expBackoff(), () => SH`curl -s https://flipwrsi`);
 		assert.unreachable('should have thrown');
 	} catch (e) {
-	  assert.equal(e instanceof ProcessOutput, true);
-	  assert.equal(e.exitCode, 6);
-  }
+		assert.equal(e instanceof ProcessOutput, true);
+		assert.equal(e.exitCode, 6);
+	}
 });
 
-test('flags', async() => {
+test('flags', async () => {
 	const flags = ['-F', '-l', '-a']
 	const res = await SH`ls ${flags} | grep README`;
 	assert.equal(res.exitCode, 0);
 });
 
-test('error', async() => {
+test('error', async () => {
 	SH.verbose = false;
-
 	try {
-	  const res = await SH`$$BREAK IT`;
+		const res = await SH`$$BREAK IT`;
 		assert.unreachable('should have thrown');
 	} catch (e) {
 		console.log(e);
-    assert.equal(e.exitCode, 127);		
+		assert.equal(e.exitCode, 127);
 	}
 })
-
+test('kill', async () => {
+	const p = SH`sleep 5; echo 1`;
+	setTimeout(async () => {
+		const pids = await p.kill();
+		assert.equal(pids.length, 2);
+	}, 10);
+	// The promise will error 
+	// when killed
+	p.catch((e) => {
+		assert.equal(e.exitCode, null);
+	});
+});
+test('kill, not throw', async () => {
+	const p = SH`sleep 5; echo 1`;
+	p.nothrow();
+	setTimeout(async () => {
+		const pids = await p.kill();
+		assert.equal(pids.length, 2);
+	}, 10);
+	p.catch((e) => {
+		assert.unreachable('should not have thrown');
+	});
+});
 test.run();
